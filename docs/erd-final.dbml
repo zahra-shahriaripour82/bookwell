@@ -1,0 +1,124 @@
+// CoachSlot ERD: final version with constraints (Week 1 Wednesday)
+// Paste this whole file into dbdiagram.io to see the diagram.
+// Compare it with YOUR version: differences are not always mistakes,
+// but you should be able to explain why you chose differently.
+
+// ---------- Identity ----------
+
+Table users {
+  id uuid [pk]
+  email varchar [not null, unique]
+  password_hash varchar [not null, note: 'never store the plain password']
+  name varchar [not null]
+  created_at timestamptz [not null]
+}
+
+// A LOGIN session (who is logged in), not a training session
+Table sessions {
+  id varchar [pk, note: 'long random token stored in the cookie']
+  user_id uuid [not null, ref: > users.id]
+  expires_at timestamptz [not null]
+  created_at timestamptz [not null]
+}
+
+// ---------- Organizations (gyms) ----------
+
+Table gyms {
+  id uuid [pk]
+  name varchar [not null]
+  timezone varchar [not null, note: 'IANA name, e.g. America/New_York']
+  created_at timestamptz [not null]
+}
+
+// Links a user to a gym with a role. One user could be a client
+// at one gym and a coach at another, so the role lives HERE,
+// not on users.
+Table memberships {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  gym_id uuid [not null, ref: > gyms.id]
+  role varchar [not null, note: 'owner | coach | client']
+  status varchar [not null, note: 'invited | active | removed']
+  created_at timestamptz [not null]
+
+  indexes {
+    (user_id, gym_id) [unique, note: 'a user joins a gym only once']
+  }
+}
+
+// ---------- Catalog ----------
+
+Table session_types {
+  id uuid [pk]
+  gym_id uuid [not null, ref: > gyms.id]
+  name varchar [not null]
+  duration_minutes int [not null, note: 'CHECK duration_minutes > 0']
+  is_archived boolean [not null, default: false]
+
+  indexes {
+    (gym_id, name) [unique, note: 'no two types with the same name in one gym']
+  }
+}
+
+// Many-to-many: a coach offers many session types,
+// a session type is offered by many coaches.
+Table coach_session_types {
+  coach_membership_id uuid [not null, ref: > memberships.id]
+  session_type_id uuid [not null, ref: > session_types.id]
+
+  indexes {
+    (coach_membership_id, session_type_id) [pk]
+  }
+}
+
+// ---------- Availability ----------
+
+Table working_hours {
+  id uuid [pk]
+  coach_membership_id uuid [not null, ref: > memberships.id]
+  weekday smallint [not null, note: '0 = Sunday ... 6 = Saturday; CHECK weekday BETWEEN 0 AND 6']
+  start_time time [not null, note: 'local gym time']
+  end_time time [not null, note: 'CHECK end_time > start_time']
+}
+
+Table time_off {
+  id uuid [pk]
+  coach_membership_id uuid [not null, ref: > memberships.id]
+  date date [not null]
+
+  indexes {
+    (coach_membership_id, date) [unique, note: 'a day off is marked once']
+  }
+}
+
+// ---------- Booking ----------
+
+Table bookings {
+  id uuid [pk]
+  gym_id uuid [not null, ref: > gyms.id, note: 'makes "only this gym''s bookings" queries simple and safe']
+  coach_membership_id uuid [not null, ref: > memberships.id]
+  client_membership_id uuid [not null, ref: > memberships.id]
+  session_type_id uuid [not null, ref: > session_types.id]
+  starts_at timestamptz [not null, note: 'stored in UTC']
+  ends_at timestamptz [not null, note: 'CHECK ends_at > starts_at']
+  status varchar [not null, note: 'booked | cancelled_by_client | cancelled_by_coach | cancelled_by_gym | completed | no_show']
+  cancelled_at timestamptz [null, note: 'empty until cancelled']
+  created_at timestamptz [not null]
+
+  indexes {
+    (coach_membership_id, starts_at) [unique, note: 'DOUBLE-BOOKING GUARD. In SQL make it a partial unique index: WHERE status = ''booked'', so a cancelled slot can be booked again']
+  }
+}
+
+// ---------- Audit ----------
+
+Table audit_entries {
+  id uuid [pk]
+  gym_id uuid [not null, ref: > gyms.id]
+  actor_user_id uuid [null, ref: > users.id, note: 'empty if the system did it']
+  action varchar [not null, note: 'e.g. booking.cancelled']
+  entity_type varchar [not null, note: 'e.g. booking']
+  entity_id uuid [not null]
+  details jsonb [null]
+  created_at timestamptz [not null]
+}
