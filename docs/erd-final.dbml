@@ -1,7 +1,6 @@
-// CoachSlot ERD: final version with constraints (Week 1 Wednesday)
+// CoachSlot ERD v2 (Week 1 Saturday): fixes found by checking every user story
+// Changes from v1 are marked  // NEW (story)  or  // CHANGED (story)
 // Paste this whole file into dbdiagram.io to see the diagram.
-// Compare it with YOUR version: differences are not always mistakes,
-// but you should be able to explain why you chose differently.
 
 // ---------- Identity ----------
 
@@ -10,6 +9,16 @@ Table users {
   email varchar [not null, unique]
   password_hash varchar [not null, note: 'never store the plain password']
   name varchar [not null]
+  created_at timestamptz [not null]
+}
+
+// NEW (A2): a password-reset link that works once and expires after 1 hour
+Table password_resets {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  token varchar [not null, unique, note: 'long random string in the reset link']
+  expires_at timestamptz [not null, note: 'created_at + 1 hour']
+  used_at timestamptz [null, note: 'empty until used; once set, the link is dead']
   created_at timestamptz [not null]
 }
 
@@ -27,6 +36,8 @@ Table gyms {
   id uuid [pk]
   name varchar [not null]
   timezone varchar [not null, note: 'IANA name, e.g. America/New_York']
+  contact_email varchar [not null, note: 'NEW (C3): who clients contact when they cannot cancel']
+  contact_phone varchar [null, note: 'NEW (C3): optional']
   created_at timestamptz [not null]
 }
 
@@ -38,12 +49,25 @@ Table memberships {
   user_id uuid [not null, ref: > users.id]
   gym_id uuid [not null, ref: > gyms.id]
   role varchar [not null, note: 'owner | coach | client']
-  status varchar [not null, note: 'invited | active | removed']
+  status varchar [not null, note: 'CHANGED (O2): active | removed. Invited people live in invites, because they have no user yet']
   created_at timestamptz [not null]
 
   indexes {
     (user_id, gym_id) [unique, note: 'a user joins a gym only once']
   }
+}
+
+// NEW (O2, CO7): an invite for a person who may not have an account yet,
+// so it cannot be a membership (memberships.user_id must point to a user)
+Table invites {
+  id uuid [pk]
+  gym_id uuid [not null, ref: > gyms.id]
+  email varchar [not null]
+  role varchar [not null, note: 'coach (only coaches are invited in v1)']
+  token varchar [not null, unique, note: 'long random string in the invite link']
+  expires_at timestamptz [not null]
+  accepted_at timestamptz [null, note: 'empty until accepted; once set, the link is dead (CO7)']
+  created_at timestamptz [not null]
 }
 
 // ---------- Catalog ----------
@@ -95,7 +119,7 @@ Table time_off {
 
 Table bookings {
   id uuid [pk]
-  gym_id uuid [not null, ref: > gyms.id, note: 'makes "only this gym''s bookings" queries simple and safe']
+  gym_id uuid [not null, ref: > gyms.id, note: 'makes "only this gym\'s bookings" queries simple and safe']
   coach_membership_id uuid [not null, ref: > memberships.id]
   client_membership_id uuid [not null, ref: > memberships.id]
   session_type_id uuid [not null, ref: > session_types.id]
@@ -106,7 +130,7 @@ Table bookings {
   created_at timestamptz [not null]
 
   indexes {
-    (coach_membership_id, starts_at) [unique, note: 'DOUBLE-BOOKING GUARD. In SQL make it a partial unique index: WHERE status = ''booked'', so a cancelled slot can be booked again']
+    (coach_membership_id, starts_at) [unique, note: 'DOUBLE-BOOKING GUARD. In SQL make it a partial unique index: WHERE status = \'booked\', so a cancelled slot can be booked again']
   }
 }
 
