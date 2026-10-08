@@ -9,24 +9,24 @@ Words used everywhere: **owner, coach, client, session type, booking, slot**.
 
 ### O1 — Create the gym account
 
-**As the** owner, **I want** to create an account for my gym,
-**so that** my coaches and clients can use one shared schedule.
+As the owner, I want to create an account for my gym,
+so that my coaches and clients can use one shared schedule.
 
 - Given I'm not registered, when I sign up with the gym name, my email and a password, then the gym is created and I'm logged in as its owner.
 - Given the email is already used, when I sign up, then I see "This email already has an account" and nothing is created.
 
 ### O2 — Invite a coach
 
-**As the** owner, **I want** to invite a coach by email,
-**so that** they can set their hours and clients can book them.
+As the owner, I want to invite a coach by email,
+so that they can set their hours and clients can book them.
 
 - Given I enter a coach's email, when I send the invite, then they get a link to join my gym and appear in my coach list as "Invited".
 - Given the coach accepts the invite, when I open my coach list, then they show as "Active".
 
 ### O3 — Remove a coach
 
-**As the** owner, **I want** to remove a coach who no longer works at the gym,
-**so that** clients can't book someone who isn't here.
+As the owner, I want to remove a coach who no longer works at the gym,
+so that clients can't book someone who isn't here.
 
 - Given a coach is removed, when a client looks for coaches, then that coach isn't listed and the coach can no longer log in to my gym.
 - Given the coach still has upcoming bookings, when I try to remove them, then I see those bookings and must confirm first.
@@ -34,16 +34,16 @@ Words used everywhere: **owner, coach, client, session type, booking, slot**.
 
 ### O4 — Define session types
 
-**As the** owner, **I want** to define session types with a name and length (for example "60-min personal training"),
-**so that** clients know what they're booking and how long it takes.
+As the owner, I want to define session types with a name and length (for example "60-min personal training"),
+so that clients know what they're booking and how long it takes.
 
 - Given I enter a name and a length of 60 minutes, when I save, then the session type appears in the list clients choose from.
 - Given the length is empty or 0, when I save, then I see an error and it isn't saved.
 
 ### O5 — See all bookings
 
-**As the** owner, **I want** to see all bookings for all coaches in one list,
-**so that** I can answer "is there a free slot?" questions and spot problems without messaging each coach.
+As the owner, I want to see all bookings for all coaches in one list,
+so that I can answer "is there a free slot?" questions and spot problems without messaging each coach.
 
 - Given there are bookings for 3 coaches this week, when I open Bookings, then I see each one with date, time, coach, client, session type and status.
 - Given I filter by one coach, then I see only that coach's bookings.
