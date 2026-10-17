@@ -29,7 +29,7 @@ CREATE TABLE memberships (
 
 CREATE TABLE session_types (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  gym_id uuid NOT NULL REFERENCES gyms(id) ,
+  gym_id uuid NOT NULL REFERENCES gyms(id),
   name varchar NOT NULL,
   duration_minutes int NOT NULL CHECK (duration_minutes > 0),
   is_archived boolean NOT NULL DEFAULT false,
@@ -54,22 +54,18 @@ CREATE TABLE bookings (
       'no_show'
     )
   ),
+  cancelled_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
 
-
-  cancelled_at timestamptz ,
-
-    -- = compare results of the two expressions to ensure that cancelled_at is set if and only if the status is a cancelled status
-  -- if one expression  is true , other must be true, if one is false, other must be false.
-
-  CHECK ((status LIKE 'cancelled%')= (cancelled_at IS NOT NULL))
-  created_at timestamptz NOT NULL DEFAULT now()
+  -- "=" compares the two true/false results: cancelled_at is set
+  -- if and only if the status is one of the cancelled statuses.
+  CHECK ((status LIKE 'cancelled%') = (cancelled_at IS NOT NULL))
 );
 
+-- A coach can't have two active bookings starting at the same time.
 CREATE UNIQUE INDEX bookings_coach_start_active_idx
-ON bookings (coach_membership_id, starts_at)
-WHERE status = 'booked';
+  ON bookings (coach_membership_id, starts_at)
+  WHERE status = 'booked';
 
-
---  this index is used to enforce case-insensitive uniqueness of email addresses 
-
+-- Case-insensitive unique email: "A@x.com" and "a@x.com" can't both exist.
 CREATE UNIQUE INDEX lower_case_email_idx ON users (lower(email));
