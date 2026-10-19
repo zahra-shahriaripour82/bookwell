@@ -31,7 +31,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     this.logger.error(exception);
     res.status(500).json({
       error: {
-        code: 'INTERNAL_SERVER_ERROR',
+        code: 'INTERNAL_ERROR',
         message: 'Something went wrong.',
         requestId,
       },
