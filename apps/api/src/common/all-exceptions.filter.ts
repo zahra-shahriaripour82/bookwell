@@ -32,7 +32,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     res.status(500).json({
       error: {
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'An internal server error occured',
+        message: 'Something went wrong.',
         requestId,
       },
     });
