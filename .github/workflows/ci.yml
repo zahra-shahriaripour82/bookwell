@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    # A throwaway Postgres just for this job. It's deleted when the job ends.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: coachslot_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/coachslot_test
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Installs pnpm (version from package.json), Node (from .node-version), and runs pnpm install
+      - uses: pnpm/setup@v3
+        with:
+          cache: true
+          require-lockfile: true
+
+      - name: Lint
+        run: |
+          pnpm --filter api lint
+          pnpm --filter web lint
+
+      - name: Typecheck
+        run: pnpm --filter api exec tsc --noEmit
+
+      - name: Migrate (the second run must change nothing)
+        run: |
+          pnpm --filter api exec drizzle-kit migrate
+          pnpm --filter api exec drizzle-kit migrate
+
+      - name: Build
+        run: |
+          pnpm --filter api build
+          pnpm --filter web build
+
+      - name: Test
+        run: |
+          pnpm --filter api test
+          pnpm --filter api test:e2e
