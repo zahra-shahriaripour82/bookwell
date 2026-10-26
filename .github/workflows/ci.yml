@@ -59,3 +59,15 @@ jobs:
         run: |
           pnpm --filter api test
           pnpm --filter api test:e2e
+  deploy:
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy API and website on Render
+        env:
+          API_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+          WEB_HOOK: ${{ secrets.RENDER_WEB_DEPLOY_HOOK }}
+        run: |
+          curl -fsS -X POST "$API_HOOK"
+          curl -fsS -X POST "$WEB_HOOK"
