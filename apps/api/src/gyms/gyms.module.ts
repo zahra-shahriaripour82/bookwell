@@ -4,6 +4,6 @@ import { GymsService } from './gyms.service.js';
 
 @Module({
   controllers: [GymsController],
-  providers: [GymsService]
+  providers: [GymsService],
 })
 export class GymsModule {}
