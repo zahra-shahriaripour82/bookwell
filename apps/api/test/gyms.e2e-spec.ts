@@ -3,7 +3,7 @@ import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module.js';
 
-describe('error format and request ids (e2e)', () => {
+describe(' gyms (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
