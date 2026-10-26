@@ -59,9 +59,3 @@ jobs:
         run: |
           pnpm --filter api test
           pnpm --filter api test:e2e
-  deploy-api:
-    needs: ci
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
