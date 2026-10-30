@@ -1,0 +1,18 @@
+
+| 1 | Someone uses a coach's account on a shared computer | A coach forgot to log out at the front desk, and the next person uses her open session | High: they act as the coach: see clients' details, book or cancel sessions | Log out ends the session on the server, and Back shows the login page (A3); auto logout after 15 min idle (A4); "Log out everywhere" from her phone (A5) | A3, A4, A5 |
+
+
+| 2 | Our database is leaked, attacker reads passwords | A developer mistake (e.g. a leaked DATABASE_URL or backup) gives the attacker a copy of the users table | Without hashing: High, they log in anywhere, also on other sites where users reuse the password. With argon2id: Low–Medium, only very weak passwords can be guessed | Store only an argon2id hash with a unique salt, never the password itself. Keep DATABASE_URL secret (only in .env and Render) | Test: after register, the password column starts with "$argon2id$" and doesn't contain the password |
+
+
+
+| 3 | Someone tries thousands of passwords for one email | Attacker found a real email (e.g. via row 5) and tries common passwords on the login page | High if it works: full access to that account | After 5 wrong passwords for an email: wait 10 minutes, same message for every email, warning email to the owner of the account. Passwords need at least 8 characters | A6, C4; test: 6th wrong try returns the "Too many attempts" message |
+
+
+
+| 4 | A session cookie is stolen | (a) Bad JavaScript on our page reads document.cookie; (b) someone on the gym Wi-Fi reads unencrypted traffic; (c) someone with a DB copy reads session IDs | High: they act as the user (see clients' details, book or cancel sessions) until the session ends | (a) HttpOnly cookie: JavaScript can't read it. (b) Secure cookie: sent only over https. (c) Store a hash of the session ID in the DB, never the ID itself. If stolen anyway: the session ends after 15 min idle on shared computers (A4), the user can kill it with "Log out everywhere" (A5), and server sessions can be deleted at once (ADR-003) | A4, A5; tests: cookie has HttpOnly and Secure flags; after "Log out everywhere" the old cookie gets 401 |
+
+
+
+| 5 | | 5 | Someone finds out which emails have an account (account enumeration) | Attacker tries many emails on the sign-up page | Low–Medium: they get a list of real accounts to use for password guessing and phishing | Rate limiting on sign-up (5 per 3 min per IP). Risk ACCEPTED because the product owner doesn't want to confuse users, and coaches' emails are often public on the gym website anyway | O1 criterion 3 |
+
