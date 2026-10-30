@@ -14,6 +14,8 @@ so that my coaches and clients can use one shared schedule.
 
 - Given I'm not registered, when I sign up with the gym name, my email and a password, then the gym is created and I'm logged in as its owner.
 - Given the email is already used, when I sign up, then I see "This email already has an account" and nothing is created.
+- Given someone tries 5 sign-ups in 3 minutes from the same IP address, when they try again,
+  then they see "Too many attempts, please try again in 15 minutes" and no account is created.
 
 ### O2 — Invite a coach
 
@@ -191,6 +193,56 @@ so that I can answer "is there a free slot?" questions and spot problems without
 **so that** I don't lose access to my account.
 
 - Given I request a reset for my email, then I get a reset link that works once and expires after 1 hour.
+
+
+
+### A3 — Log out
+**As a** coach using a shared computer,
+**I want** to log out when I'm done,
+**so that** the next person at the computer can't see or change my bookings.
+
+- Given I'm logged in, when I click "Log out", then I see the login page,
+  and my session no longer works: opening any of my pages sends me to the login page.
+- Given I logged out, when someone presses Back in the browser, then they see the login
+  page, not my schedule.
+
+### A4 — Logged out automatically on a shared computer
+**As a** coach,
+**I want** to be logged out by itself if I forget,
+**so that** nobody can use my account after I walk away.
+
+- Given I'm logged in at the front desk and nobody uses it for 15 minutes,
+  when someone clicks anything, then they see the login page with
+  "You were logged out because you were inactive."
+- Given I'm logged in on my own phone, when I use the app at least once a week,
+  then I stay logged in (no more than one login per week).
+
+### A5 — Log out everywhere
+**As a** coach,
+**I want** to log out of all my other devices from my phone,
+**so that** nobody can use my account if I forgot to log out somewhere.
+
+- Given I'm logged in on my phone and on the front-desk computer,
+  when I press "Log out everywhere" on my phone,
+  then the next click on the front-desk computer shows the login page.
+- Given I pressed "Log out everywhere",
+  then I stay logged in on my phone, because I just proved I'm the real user there.
+- Given I'm logged in on 2 devices, when I open "My devices",
+  then I see one line per device with the device name, when it was last used,
+  and "This device" next to the one I'm using.
+
+### A6 — Too many wrong passwords
+**As a** coach,
+**I want** strangers to be stopped from guessing my password, without locking me out for long,
+**so that** nobody can get into my account, and I can still log in before my class.
+
+- Given someone typed a wrong password 5 times for my email,
+  when they try again, then they see "Too many attempts. Please wait 10 minutes,
+  or reset your password." and must wait 10 minutes.
+- Given that happened, then I get an email: "Someone tried to log in to your account 5 times.
+  Wasn't you? Change your password and log out everywhere." with a button for each.
+- Given I waited 10 minutes, when I type the right password, then I'm logged in as normal.
+
 
 ### S1 — Clients only see their own bookings
 
