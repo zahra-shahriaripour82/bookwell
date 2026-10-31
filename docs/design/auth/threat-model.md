@@ -14,5 +14,5 @@
 
 
 
-| 5 | | 5 | Someone finds out which emails have an account (account enumeration) | Attacker tries many emails on the sign-up page | Low–Medium: they get a list of real accounts to use for password guessing and phishing | Rate limiting on sign-up (5 per 3 min per IP). Risk ACCEPTED because the product owner doesn't want to confuse users, and coaches' emails are often public on the gym website anyway | O1 criterion 3 |
+| 5 | | 5 | Someone finds out which emails have an account (account enumeration) | Attacker tries many emails on the sign-up page | Low–Medium: they get a list of real accounts to use for password guessing and phishing | Rate limiting on sign-up (10 per 3 min per IP). Risk ACCEPTED because the product owner doesn't want to confuse users, and coaches' emails are often public on the gym website anyway | O1 criterion 3 |
 
