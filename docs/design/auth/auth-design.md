@@ -69,7 +69,8 @@ Value: the random session ID (only its hash is in the DB)
 - SameSite: ? (I'll read about it on Day 3)
 - Max-Age: with "Remember me" = 30days; without = no Max-Age, so the cookie
   disappears when the browser is closed
-
+- Token: 32 random bytes, so it can't be guessed (OWASP: at least 64 bits).
+- At login we always generate new token , never reuse an old cookie (stops session fixation).
 
 ### 4.Rate limits
 Sign-up is 20 per 3 minutes per IP, not 5, because everyone on the gym Wi-Fi shares
