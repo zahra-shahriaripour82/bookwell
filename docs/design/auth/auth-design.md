@@ -72,7 +72,9 @@ Value: the random session ID (only its hash is in the DB)
 
 - HttpOnly: so JavaScript can't read it (threat row 4a)
 - Secure: so it's only sent over https (threat row 4b)
-- SameSite: ? (I'll read about it on Day 3)
+- SameSite: Lax. Our two Render addresses are cross-site (onrender.com is a public suffix),
+  so the website will reach the API through its own domain (/api rewrite). Check on Day 4.
+
 - Max-Age: with "Remember me" = 30 days; without = no Max-Age, so the cookie
   disappears when the browser is closed
 - Token: 32 random bytes, so it can't be guessed (OWASP: at least 64 bits).

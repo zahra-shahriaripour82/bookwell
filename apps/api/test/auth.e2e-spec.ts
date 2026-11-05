@@ -24,57 +24,77 @@ describe('POST /auth/register (e2e)', () => {
   // a new email every time, so tests never clash with old rows
   const newEmail = () => `sara+${Date.now()}${Math.random()}@test.com`;
 
-
   it('creates a user → 201, without password_hash', async () => {
     const email = newEmail();
 
     const res = await request(app.getHttpServer())
       .post('/auth/register')
-      .send({ email, password: 'longpassword1', name: 'Sara' })
+      .send({
+        email,
+        password: 'longpassword1',
+        name: 'Sara',
+        gymName: 'Gym',
+        timezone: 'Europe/Stockholm',
+      })
       .expect(201);
 
-    expect(res.body.id).toBeDefined();
-    expect(res.body.email).toBe(email);
-    expect(res.body.password_hash).toBeUndefined();  
+    expect(res.body.user.id).toBeDefined();
+    expect(res.body.user.email).toBe(email);
+    expect(res.body.user.password_hash).toBeUndefined();
+    expect(res.body.gym.name).toBe('Gym');
   });
 
   it('same email again → 409 CONFLICT', async () => {
     const email = newEmail();
-    const body = { email, password: 'longpassword1', name: 'Sara' };
+    const body = {
+      email,
+      password: 'longpassword1',
+      name: 'Sara',
+      gymName: 'Gym',
+      timezone: 'Europe/Stockholm',
+    };
 
-    await request(app.getHttpServer()).post('/auth/register').send(body).expect(201);
-    const res = await request(app.getHttpServer()).post('/auth/register').send(body).expect(409);
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(body)
+      .expect(201);
+    const res = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(body)
+      .expect(409);
 
     expect(res.body.error.code).toBe('CONFLICT');
   });
 
- 
   it('same email in CAPITALS → 409', async () => {
-  const email = newEmail();
+    const email = newEmail();
 
-  // First request: lowercase email
-  await request(app.getHttpServer())
-    .post('/auth/register')
-    .send({
-      email,
-      password: 'longpassword1',
-      name: 'Sara',
-    })
-    .expect(201);
+    // First request: lowercase email
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        email,
+        password: 'longpassword1',
+        name: 'Sara',
+        gymName: 'Gym',
+        timezone: 'Europe/Stockholm',
+      })
+      .expect(201);
 
-  // Second request: uppercase email
-  const res = await request(app.getHttpServer())
-    .post('/auth/register')
-    .send({
-      email: email.toUpperCase(),
-      password: 'longpassword1',
-      name: 'Sara',
-    })
-    .expect(409);
+    // Second request: uppercase email
+    const res = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        email: email.toUpperCase(),
+        password: 'longpassword1',
+        name: 'Sara',
+        gymName: 'Gym',
+        timezone: 'Europe/Stockholm',
+      })
+      .expect(409);
 
-  expect(res.body.error.code).toBe('CONFLICT');
-});
-
+    expect(res.body.error.code).toBe('CONFLICT');
+  });
 
   it('invalid email → 400 BAD_REQUEST', async () => {
     const res = await request(app.getHttpServer())
@@ -85,50 +105,58 @@ describe('POST /auth/register (e2e)', () => {
     expect(res.body.error.code).toBe('BAD_REQUEST');
   });
 
+  it('password of 7 characters → 400', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        email: newEmail(),
+        password: '1234567',
+        name: 'Sara',
+        gymName: 'Gym',
+        timezone: 'Europe/Stockholm',
+      })
+      .expect(400);
 
- it('password of 7 characters → 400', async () => {
-  const res = await request(app.getHttpServer())
-    .post('/auth/register')
-    .send({
-      email: newEmail(),
-      password: '1234567',
-      name: 'Sara',
-    })
-    .expect(400);
+    expect(res.body.error.code).toBe('BAD_REQUEST');
+  });
 
-  expect(res.body.error.code).toBe('BAD_REQUEST');
-});
+  it('extra field like role → 400', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        email: newEmail(),
+        password: 'longpassword1',
+        name: 'Sara',
+        role: 'owner',
+        gymName: 'Gym',
+        timezone: 'Europe/Stockholm',
+      })
+      .expect(400);
 
-  
-it('extra field like role → 400', async () => {
-  const res = await request(app.getHttpServer())
-    .post('/auth/register')
-    .send({
-      email: newEmail(),
-      password: 'longpassword1',
-      name: 'Sara',
-      role: 'owner',
-    })
-    .expect(400);
+    expect(res.body.error.code).toBe('BAD_REQUEST');
+  });
 
-  expect(res.body.error.code).toBe('BAD_REQUEST');
-});
+  it('stores an argon2id hash, never the password', async () => {
+    const email = newEmail();
+    const password = 'longpassword1';
 
- it('stores an argon2id hash, never the password', async () => {
-  const email = newEmail();
-  const password = 'longpassword1';
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        email,
+        password,
+        name: 'Sara',
+        gymName: 'Gym',
+        timezone: 'Europe/Stockholm',
+      })
+      .expect(201);
 
-  await request(app.getHttpServer())
-    .post('/auth/register')
-    .send({ email, password, name: 'Sara' })
-    .expect(201);
+    const [row] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, email));
 
-  const [row] = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.email, email));
-
-  expect(row.password_hash.startsWith('$argon2id$')).toBe(true);
-  expect(row.password_hash).not.toContain(password);
-});
+    expect(row.password_hash.startsWith('$argon2id$')).toBe(true);
+    expect(row.password_hash).not.toContain(password);
+  });
 });
