@@ -18,12 +18,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const res = ctx.getResponse<Response>();
     const requestId = req.id;
 
-    if (
-      exception instanceof HttpException &&
-      exception.getStatus() === HttpStatus.NOT_FOUND
-    ) {
-      res.status(404).json({
-        error: { code: 'NOT_FOUND', message: exception.message, requestId },
+    if (exception instanceof HttpException) {
+      const status = exception.getStatus();
+
+      res.status(status).json({
+        error: {
+          code: HttpStatus[status],
+          message: exception.message,
+          requestId,
+        },
       });
       return;
     }
