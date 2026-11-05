@@ -15,7 +15,7 @@ so that my coaches and clients can use one shared schedule.
 - Given I'm not registered, when I sign up with the gym name, my email and a password, then the gym is created and I'm logged in as its owner.
 - Given the email is already used, when I sign up, then I see "This email already has an account" and nothing is created.
 
-- Given someone tries 5 sign-ups in 3 minutes from the same IP address, when they try again, then they see “Too many attempts, please try again in 15 minutes” and no account is created.
+- Given someone tries 20 sign-ups in 3 minutes from the same IP address, when they try again, then they see “Too many attempts, please try again in 15 minutes” and no account is created.
 
 ### O2 — Invite a coach
 
