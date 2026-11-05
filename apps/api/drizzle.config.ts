@@ -1,4 +1,7 @@
-import 'dotenv/config';
+import { existsSync } from 'node:fs';
+
+if (existsSync('.env')) {
+  process.loadEnvFile('.env'); }
 import { defineConfig } from 'drizzle-kit';
 export default defineConfig({
   out: './drizzle',
