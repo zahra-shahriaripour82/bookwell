@@ -1,8 +1,12 @@
-import { usersTable, gymsTable, membershipsTable } from '../db/schema.js';
-import { ConflictException, Injectable } from '@nestjs/common';
+import { usersTable, gymsTable, membershipsTable, sessionsTable } from '../db/schema.js';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto.js';
-import { hash } from '@node-rs/argon2';
+import { hash, verify } from '@node-rs/argon2';
 import { db } from '../index.js';
+import { LoginDto } from './dto/login.dto.js';
+
+import { eq } from 'drizzle-orm';
+import { hashToken, newToken } from './token.js';
 
 @Injectable()
 export class AuthService {
@@ -43,5 +47,51 @@ export class AuthService {
       }
       throw err;
     }
+  
   }
+
+
+async login(dto: LoginDto, userAgent: string| undefined) {
+  
+  const email = dto.email.toLowerCase().trim();
+const DUMMY_HASH = await hash('not-a-real-password');  
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+
+const ok = await verify(user?.password_hash ?? DUMMY_HASH, dto.password);
+if (!user || !ok) throw new UnauthorizedException('Email or password is wrong');
+
+// user is found and the password is right → make the token and the session
+
+  if (!ok) {
+    throw new UnauthorizedException(
+      'Email or password is wrong',
+    );
+  }
+
+  
+  const token = newToken();
+
+  
+  await db.insert(sessionsTable).values({
+    token_hash: hashToken(token),
+    user_id: user.id,
+    remember_me: dto.rememberMe,
+    user_agent: userAgent ?? null,
+    expires_at: new Date(
+      Date.now() + 30 * 24 * 60 * 60 * 1000,
+    ),
+  });
+
+  // 6. Return token and user
+  return {
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    },
+  };
+}
+
+
 }

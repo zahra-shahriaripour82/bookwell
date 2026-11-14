@@ -136,3 +136,14 @@ export const bookingsTable = pgTable(
       .where(sql`${t.status} = 'booked'`),
   ],
 );
+
+export const sessionsTable = pgTable('sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  token_hash: varchar('token_hash').notNull().unique(),
+  user_id: uuid('user_id').notNull().references(() => usersTable.id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  last_used_at: timestamp('last_used_at', { withTimezone: true }).notNull().defaultNow(),
+  expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
+  remember_me: boolean('remember_me').notNull(),
+  user_agent: varchar('user_agent'),
+});
