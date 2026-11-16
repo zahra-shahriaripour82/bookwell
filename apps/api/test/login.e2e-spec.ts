@@ -1,4 +1,3 @@
-
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -7,16 +6,13 @@ import { eq } from 'drizzle-orm';
 
 import { AppModule } from '../src/app.module.js';
 import { db } from '../src/index.js';
-import {
-  usersTable,
-  sessionsTable,
-} from '../src/db/schema.js';
+import { usersTable, sessionsTable } from '../src/db/schema.js';
 import { hashToken } from '../src/auth/token.js';
 
 describe('Auth Login (e2e)', () => {
   let app: INestApplication;
 
-  const email = 'login-test@example.com';
+  const email = `login+${Date.now()}${Math.random()}@test.com`;
   const password = 'StrongPassword123';
 
   let userId: string;
@@ -36,9 +32,7 @@ describe('Auth Login (e2e)', () => {
       throw new Error('Set-Cookie header is missing');
     }
 
-    const cookie = Array.isArray(cookies)
-      ? cookies[0]
-      : cookies;
+    const cookie = Array.isArray(cookies) ? cookies[0] : cookies;
 
     if (!cookie?.startsWith('co-slot=')) {
       throw new Error('co-slot cookie is missing');
@@ -110,9 +104,7 @@ describe('Auth Login (e2e)', () => {
 
     expect(cookies).toBeDefined();
 
-    const cookieHeader = Array.isArray(cookies)
-      ? cookies.join(';')
-      : cookies;
+    const cookieHeader = Array.isArray(cookies) ? cookies.join(';') : cookies;
 
     expect(cookieHeader).toContain('HttpOnly');
     expect(cookieHeader).toContain('Secure');
@@ -176,9 +168,7 @@ describe('Auth Login (e2e)', () => {
   });
 
   it('should reject request without cookie', async () => {
-    await request(app.getHttpServer())
-      .get('/auth/me')
-      .expect(401);
+    await request(app.getHttpServer()).get('/auth/me').expect(401);
   });
 
   it('should reject fake cookie', async () => {
